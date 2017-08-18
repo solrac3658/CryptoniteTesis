@@ -107,6 +107,9 @@ public:
 
 
         vSeeds.push_back(CDNSSeedData("gpile.it", "gpile.it"));
+	vSeeds.push_back(CDNSSeedData("xcn.suprnova.cc", "xcn.suprnova.cc"));
+        vSeeds.push_back(CDNSSeedData("xcn-explorer.miners-zone.net", "xcn-explorer.miners-zone.net"));
+        vSeeds.push_back(CDNSSeedData("xcn-explorer.selektion21.de", "xcn-explorer.selektion21.de"));
 
         //sa ToDO: Review. The convert_to_container stuff was added as a quick fix to get it building in c++11. it should work
         // 	but not 100% certain and haven't tested
