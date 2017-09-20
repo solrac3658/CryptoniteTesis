@@ -26,9 +26,9 @@ extern const std::string CLIENT_DATE;
 // network protocol versioning
 //
 
-static const int PROTOCOL_VERSION = 10100;
+static const int PROTOCOL_VERSION = 10200;
 
-// intial proto version, to be increased after version/verack negotiation
+// initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 10100;
 
 // version where slice requests would cause ban
