@@ -259,7 +259,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-            "sendtoaddress \"cryptoniteaddress\" amount ( \"comment\" \"comment-to\" )\n"
+            "sendtoaddress \"cryptoniteaddress\" amount ( \"msg\" )\n"
             "\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
             + HelpRequiringPassphrase() +
             "\nArguments:\n"
@@ -720,7 +720,7 @@ Value sendfrom(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
-            "sendfrom \"fromaccount\" \"tocryptoniteaddress\" amount ( minconf \"comment\" \"comment-to\" )\n"
+            "sendfrom \"fromaccount\" \"tocryptoniteaddress\" amount ( minconf \"msg\" )\n"
             "\nSent an amount from an account to a cryptonite address.\n"
             "The amount is a real and is rounded to the nearest 0.00000001."
             + HelpRequiringPassphrase() + "\n"
@@ -753,7 +753,7 @@ Value sendfrom(const Array& params, bool fHelp)
     CWalletTx wtx;
     wtx.strFromAccount = strAccount;
     if (params.size() > 4 && params[4].type() != null_type && !params[4].get_str().empty()){
-	string msg = params[2].get_str();
+	string msg = params[4].get_str();
         wtx.msg = vector<char>(msg.begin(),msg.end());
     }
 
@@ -810,7 +810,7 @@ Value sendmany(const Array& params, bool fHelp)
     CWalletTx wtx;
     wtx.strFromAccount = strAccount;
     if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty()){
-	string msg = params[2].get_str();
+	string msg = params[3].get_str();
         wtx.msg = vector<char>(msg.begin(),msg.end());
     }
 
@@ -927,7 +927,7 @@ Value ListReceived(const Array& params, bool fByAccounts)
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
-   
+
         int nDepth = GetDepthInMainChain(wtx.GetTxID());
         if (nDepth < nMinDepth)
             continue;
