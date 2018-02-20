@@ -980,7 +980,7 @@ bool CheckProofOfWork(uint256 hash, double nBits)
     bool fNegative;
     bool fOverflow;
     uint256 target = GetTargetWork(nBits);
-    target.SetCompact(nBits, &fNegative, &fOverflow);
+    //target.SetCompact(nBits, &fNegative, &fOverflow);
 
     //printf("%s %f\n", hash.GetHex().c_str(), nBits);
     // Check range
