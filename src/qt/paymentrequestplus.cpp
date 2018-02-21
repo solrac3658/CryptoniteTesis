@@ -17,6 +17,10 @@
 #include <QDebug>
 #include <QSslCertificate>
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000
+#define EVP_MD_CTX_new EVP_MD_CTX_create
+#define EVP_MD_CTX_free EVP_MD_CTX_destroy
+#endif
 
 class SSLVerifyError : public std::runtime_error
 {
@@ -158,15 +162,20 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         std::string data_to_verify;                     // Everything but the signature
         rcopy.SerializeToString(&data_to_verify);
 
-        EVP_MD_CTX ctx;
+        EVP_MD_CTX *ctx;
+        ctx = EVP_MD_CTX_new();
+				if (ctx == NULL) {
+					throw SSLVerifyError("failed to allocate EVP_MD_CTX.");
+				}
         EVP_PKEY *pubkey = X509_get_pubkey(signing_cert);
-        EVP_MD_CTX_init(&ctx);
-        if (!EVP_VerifyInit_ex(&ctx, digestAlgorithm, NULL) ||
-            !EVP_VerifyUpdate(&ctx, data_to_verify.data(), data_to_verify.size()) ||
-            !EVP_VerifyFinal(&ctx, (const unsigned char*)paymentRequest.signature().data(), paymentRequest.signature().size(), pubkey)) {
-
+        EVP_MD_CTX_init(ctx);
+        if (!EVP_VerifyInit_ex(ctx, digestAlgorithm, NULL) ||
+            !EVP_VerifyUpdate(ctx, data_to_verify.data(), data_to_verify.size()) ||
+            !EVP_VerifyFinal(ctx, (const unsigned char*)paymentRequest.signature().data(), paymentRequest.signature().size(), pubkey)) {
+						EVP_MD_CTX_free(ctx);
             throw SSLVerifyError("Bad signature, invalid PaymentRequest.");
         }
+        EVP_MD_CTX_free(ctx);
 
         // OpenSSL API for getting human printable strings from certs is baroque.
         int textlen = X509_NAME_get_text_by_NID(certname, NID_commonName, NULL, 0);
@@ -199,7 +208,7 @@ QList<std::pair<uint160,qint64> > PaymentRequestPlus::getPayTo() const
     QList<std::pair<uint160,qint64> > result;
     for (int i = 0; i < details.outputs_size(); i++)
     {
-        const unsigned char* hashData = (const unsigned char*)details.outputs(i).key().data(); 
+        const unsigned char* hashData = (const unsigned char*)details.outputs(i).key().data();
 	uint160 u;
 	memcpy(u.begin(),hashData,20);
 
