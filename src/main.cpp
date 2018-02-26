@@ -450,7 +450,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     // Check for negative or overflow output values
     uint64_t nValueOut;
     try {
-        tx.GetValueOut();
+        nValueOut = tx.GetValueOut();
     } catch (int e) {
             return state.DoS(100, error("CheckTransaction() : txout total out of range"),
                              REJECT_INVALID, "bad-txns-txouttotal-toolarge");
@@ -458,7 +458,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 
     uint64_t nValueIn;
     try {
-        tx.GetValueIn();
+        nValueIn = tx.GetValueIn();
     } catch (int e) {
             return state.DoS(100, error("CheckTransaction() : txin total out of range"),
                              REJECT_INVALID, "bad-txns-txintotal-toolarge");
@@ -479,7 +479,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
     {
 				uint64_t balance=0;
-				if(pviewTip->Balance(txin.pubKey,balance) > 1800000000 * COIN)
+				pviewTip->Balance(txin.pubKey,balance);
+				if(balance > 1800000000 * COIN)
             return state.DoS(100, error("CheckTransaction() : txin total out of range"),
                              REJECT_INVALID, "bad-txns-txintotal-toolarge");
     }
