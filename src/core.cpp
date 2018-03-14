@@ -28,7 +28,7 @@ std::string CTxIn::ToString() const
     if (IsNull())
         str += strprintf("nValue %d.%08d, coinbase %s",  nValue / COIN, nValue % COIN, HexStr(scriptSig));
     else
-        str += strprintf("nValue %d.%08d, addr %s, pubKey %s, scriptSig=%s",  nValue / COIN, nValue % COIN, 
+        str += strprintf("nValue %d.%08d, addr %s, pubKey %s, scriptSig=%s",  nValue / COIN, nValue % COIN,
 		CBitcoinAddress(CKeyID(pubKey)).ToString(), pubKey.ToString(), HexStr(scriptSig));
     str += ")";
     return str;
@@ -86,7 +86,7 @@ uint64_t CTransaction::GetValueOut() const
     uint64_t nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, vout)
     {
-        if (!MoneyRange(txout.nValue+nValueOut) || (nValueOut + txout.nValue) < nValueOut)
+        if (!MoneyRange(txout.nValue + nValueOut) || (nValueOut + txout.nValue < nValueOut))
             throw std::runtime_error("CTransaction::GetValueOut() : value out of range");
         nValueOut += txout.nValue;
     }
@@ -98,8 +98,8 @@ uint64_t CTransaction::GetValueIn() const
     uint64_t nValueIn = 0;
     BOOST_FOREACH(const CTxIn& txin, vin)
     {
-        if (!MoneyRange(txin.nValue+nValueIn) || (nValueIn+txin.nValue) < nValueIn)
-            throw std::runtime_error("CTransaction::GetValueIn() : value in of range");
+        if (!MoneyRange(txin.nValue + nValueIn) || (nValueIn + txin.nValue < nValueIn))
+            throw std::runtime_error("CTransaction::GetValueIn() : value out of range");
         nValueIn += txin.nValue;
     }
     return nValueIn;

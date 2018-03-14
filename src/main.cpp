@@ -476,14 +476,16 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
                              REJECT_INVALID, "bad-txns-msg-length");
     }
 
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-    {
+		if (!tx.IsCoinBase()) {
+			BOOST_FOREACH(const CTxIn& txin, tx.vin)
+			{
 				uint64_t balance=0;
 				pviewTip->Balance(txin.pubKey,balance);
 				if(balance > 1800000000 * COIN)
-            return state.DoS(100, error("CheckTransaction() : txin total out of range"),
-                             REJECT_INVALID, "bad-txns-txintotal-toolarge");
-    }
+						return state.DoS(100, error("CheckTransaction() : txin out of range"),
+														 REJECT_INVALID, "bad-txns-txintotal-toolarge");
+			}
+		}
 
     // Check for duplicate inputs
     set<uint160> vInOutPoints;
@@ -2039,7 +2041,7 @@ bool static WriteBlockPosition(CBlockIndex *pindexNew, const CBlock &block, cons
 
 bool static AcceptBlockHeader(const CBlockHeader &block, CValidationState& state, CBlockIndex* &pindexNew)
 {
-    printf("Accept block header\n");
+    //printf("Accept block header\n");
 
     // Check for duplicate
     uint256 hash = block.GetHash();
