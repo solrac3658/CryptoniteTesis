@@ -13,21 +13,23 @@
 #endif
 
 #include <QApplication>
+#include <QCloseEvent>
+#include <QDesktopWidget>
 #include <QPainter>
 
-SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f, bool isTestNet) :
-    QSplashScreen(pixmap, f)
+SplashScreen::SplashScreen(Qt::WindowFlags f, bool isTestNet) :
+    QWidget(0, f), curAlignment(0)
 {
-    setAutoFillBackground(true);
+    //setAutoFillBackground(true);
 
     // set reference point, paddings
     int paddingRight            = 50;
-    int paddingTop              = 50;
+    int paddingTop              = 60;
     int titleVersionVSpace      = 25;
     int titleCopyrightVSpace    = 40;
     int titleCopyright2VSpace   = 15;
 
-    float fontFactor            = 1.0;
+    float fontFactor            = 1.1;
 
     // define text to place
     QString titleText       = tr("Cryptonite");
@@ -36,19 +38,18 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f, bool isTest
     QString copyright2Text   = QChar(0xA9)+QString(" 2014 ") + QString(tr("The Mini-Blockchain Project"));
     QString testnetAddText  = QString(tr("[testnet]")); // define text to place as single text object
 
-    QString font            = "Arial";
+    QString font            = "Open Sans";
 
     // load the bitmap for writing some text over it
-    QPixmap newPixmap;
     if(isTestNet) {
-        newPixmap     = QPixmap(":/images/splash_testnet");
+        pixmap     = QPixmap(":/images/splash_testnet");
     }
     else {
-        newPixmap     = QPixmap(":/images/splash");
+        pixmap     = QPixmap(":/images/splash");
     }
 
-    QPainter pixPaint(&newPixmap);
-    pixPaint.setPen(QColor(100,100,100));
+    QPainter pixPaint(&pixmap);
+    pixPaint.setPen(QColor(Qt::lightGray));
 
     // check font size and drawing with
     pixPaint.setFont(QFont(font, 33*fontFactor));
@@ -62,7 +63,7 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f, bool isTest
     pixPaint.setFont(QFont(font, 33*fontFactor));
     fm = pixPaint.fontMetrics();
     titleTextWidth  = fm.width(titleText);
-    pixPaint.drawText(newPixmap.width()-titleTextWidth-paddingRight,paddingTop,titleText);
+    pixPaint.drawText(pixmap.width()-titleTextWidth-paddingRight,paddingTop,titleText);
 
     pixPaint.setFont(QFont(font, 15*fontFactor));
 
@@ -73,12 +74,12 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f, bool isTest
         pixPaint.setFont(QFont(font, 10*fontFactor));
         titleVersionVSpace -= 5;
     }
-    pixPaint.drawText(newPixmap.width()-titleTextWidth-paddingRight+2,paddingTop+titleVersionVSpace,versionText);
+    pixPaint.drawText(pixmap.width()-titleTextWidth-paddingRight+2,paddingTop+titleVersionVSpace,versionText);
 
     // draw copyright stuff
     pixPaint.setFont(QFont(font, 10*fontFactor));
-    pixPaint.drawText(newPixmap.width()-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace,copyrightText);
-    pixPaint.drawText(newPixmap.width()-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace+titleCopyright2VSpace,copyright2Text);
+    pixPaint.drawText(pixmap.width()-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace,copyrightText);
+    pixPaint.drawText(pixmap.width()-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace+titleCopyright2VSpace,copyright2Text);
 
     // draw testnet string if testnet is on
     if(isTestNet) {
@@ -87,12 +88,22 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f, bool isTest
         pixPaint.setFont(boldFont);
         fm = pixPaint.fontMetrics();
         int testnetAddTextWidth  = fm.width(testnetAddText);
-        pixPaint.drawText(newPixmap.width()-testnetAddTextWidth-10,15,testnetAddText);
+        pixPaint.drawText(pixmap.width()-testnetAddTextWidth-10,15,testnetAddText);
     }
 
     pixPaint.end();
 
-    this->setPixmap(newPixmap);
+    // Set window title
+    if(isTestNet)
+        setWindowTitle(titleText + " " + testnetAddText);
+    else
+        setWindowTitle(titleText);
+
+    // Resize window and move to center of desktop, disallow resizing
+    QRect r(QPoint(), pixmap.size());
+    resize(r.size());
+    setFixedSize(r.size());
+    move(QApplication::desktop()->screenGeometry().center() - r.center());
 
     subscribeToCoreSignals();
 }
@@ -104,7 +115,7 @@ SplashScreen::~SplashScreen()
 
 void SplashScreen::slotFinish(QWidget *mainWin)
 {
-    finish(mainWin);
+    hide();
 }
 
 static void InitMessage(SplashScreen *splash, const std::string &message)
@@ -113,7 +124,7 @@ static void InitMessage(SplashScreen *splash, const std::string &message)
         Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(message)),
         Q_ARG(int, Qt::AlignBottom|Qt::AlignHCenter),
-        Q_ARG(QColor, QColor(55,55,55)));
+        Q_ARG(QColor, QColor(Qt::white)));
 }
 
 static void ShowProgressF(SplashScreen *splash, const std::string &title, int nProgress)
@@ -145,3 +156,26 @@ void SplashScreen::unsubscribeFromCoreSignals()
     ShowProgress.disconnect(boost::bind(ShowProgressF, this, _1, _2));
 #endif
 }
+
+void SplashScreen::showMessage(const QString &message, int alignment, const QColor &color)
+{
+    curMessage = message;
+    curAlignment = alignment;
+    curColor = color;
+    update();
+}
+
+void SplashScreen::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    painter.drawPixmap(0, 0, pixmap);
+    QRect r = rect().adjusted(5, 5, -5, -5);
+    painter.setPen(curColor);
+    painter.drawText(r, curAlignment, curMessage);
+}
+
+void SplashScreen::closeEvent(QCloseEvent *event)
+{
+    event->ignore();
+}
+
