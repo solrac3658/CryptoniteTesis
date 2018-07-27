@@ -6,24 +6,24 @@
 #define RPCCONSOLE_H
 
 #include "guiutil.h"
-#include "net.h"
-
 #include "peertablemodel.h"
 
+#include "net.h"
 
-#include <QWidget>
+#include <QDialog>
 
 class ClientModel;
 
+QT_BEGIN_NAMESPACE
 class QItemSelection;
-class CNodeCombinedStats;
+QT_END_NAMESPACE
 
 namespace Ui {
     class RPCConsole;
 }
 
 /** Local Bitcoin RPC console. */
-class RPCConsole: public QWidget
+class RPCConsole: public QDialog
 {
     Q_OBJECT
 
@@ -43,20 +43,6 @@ public:
 
 protected:
     virtual bool eventFilter(QObject* obj, QEvent *event);
-    void keyPressEvent(QKeyEvent *);
-
-private:
-    /** show detailed information on ui about selected node */
-    void updateNodeDetail(const CNodeCombinedStats *combinedStats);
-
-    enum ColumnWidths
-    {
-        ADDRESS_COLUMN_WIDTH = 250,
-        MINIMUM_COLUMN_WIDTH = 120
-    };
-
-    /** track the node that we are currently viewing detail on in the peers tab */
-    CNodeCombinedStats detailNodeStats;
 
 private Q_SLOTS:
     void on_lineEdit_returnPressed();
@@ -73,6 +59,7 @@ private Q_SLOTS:
 
 public Q_SLOTS:
     void clear();
+    void reject();
     void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
@@ -94,15 +81,23 @@ Q_SIGNALS:
 
 private:
     static QString FormatBytes(quint64 bytes);
+    void startExecutor();
     void setTrafficGraphRange(int mins);
+    /** show detailed information on ui about selected node */
+    void updateNodeDetail(const CNodeCombinedStats *stats);
+
+    enum ColumnWidths
+    {
+        ADDRESS_COLUMN_WIDTH = 200,
+        SUBVERSION_COLUMN_WIDTH = 100,
+        PING_COLUMN_WIDTH = 80
+    };
 
     Ui::RPCConsole *ui;
     ClientModel *clientModel;
     QStringList history;
-    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer;
     int historyPtr;
-
-    void startExecutor();
+    NodeId cachedNodeid;
 };
 
 #endif // RPCCONSOLE_H
