@@ -85,7 +85,13 @@ uint64_t AmountFromValue(const Value& value)
 	if (value.type() != str_type and (fStringAmounts or fEPAmounts))
 		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount, not string");
 
-	const char *str = value.get_str().c_str();
+	const char str[64];
+	if (fStringAmounts or fEPAmounts) {
+		strncpy(str, value.get_str().c_str(), 63);
+	} else {
+		double tmp = value.get_real();
+		snprintf(str, 63, "%f", tmp);
+	}
 
 	if (fEPAmounts) {
 		int end = strlen(str);
