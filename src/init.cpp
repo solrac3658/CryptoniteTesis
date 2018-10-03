@@ -342,6 +342,7 @@ std::string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -rpcthreads=<n>        " + _("Set the number of threads to service RPC calls (default: 4)") + "\n";
     strUsage += "  -epamounts=<n>         " + _("Use Extended Precision amounts in RPC calls (default: 1, 0 to disable)") + "\n";
     strUsage += "  -stringamounts=<n>     " + _("Use string type amounts in RPC calls (default: 1, 0 to disable); epamounts = 1 forces this to 1") + "\n";
+    strUsage += "  -standardamounts=<n>   " + _("Different behavior about sign of fees, and if adding them to amounts, in some RPC calls; for compatibility with other wallets (default: 0, 1 to enable)") + "\n";
 
     strUsage += "\n" + _("RPC SSL options: (see the Cryptonite Wiki for SSL setup instructions)") + "\n";
     strUsage += "  -rpcssl                                  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n";
@@ -561,6 +562,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     fStringAmounts = (GetArg("-stringamounts", 1) == 1);
     if (fStringAmounts) LogPrintf("Using String RPC amounts\n");
     else LogPrintf("Using Numeric RPC amounts\n");
+
+    fStandardAmounts = (GetArg("-standardamounts", 0) == 1);
+    if (fStandardAmounts) LogPrintf("Using Standard RPC amounts\n");
+    else LogPrintf("Using Backward Compatible RPC amounts\n");
 
     fDebug = !mapMultiArgs["-debug"].empty();
     // Special-case: if -debug=0/-nodebug is set, turn off debugging messages

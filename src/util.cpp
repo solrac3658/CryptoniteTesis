@@ -99,6 +99,7 @@ volatile bool fReopenDebugLog = false;
 CClientUIInterface uiInterface;
 bool fEPAmounts = true;
 bool fStringAmounts = true;
+bool fStandardAmounts = false;
 
 // Init OpenSSL library multithreading support
 static CCriticalSection** ppmutexOpenSSL;

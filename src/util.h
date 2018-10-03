@@ -117,6 +117,7 @@ extern bool fLogTimestamps;
 extern volatile bool fReopenDebugLog;
 extern bool fEPAmounts;
 extern bool fStringAmounts;
+extern bool fStandardAmounts;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();

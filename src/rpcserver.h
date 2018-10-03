@@ -104,6 +104,7 @@ extern void ShutdownRPCMining();
 extern int64_t nWalletUnlockTime;
 extern uint64_t AmountFromValue(const json_spirit::Value& value);
 extern json_spirit::Value ValueFromAmount(uint64_t amount);
+extern json_spirit::Value ValueFromAmount_signed(int64_t amount);
 extern double GetDifficulty(const CBlockIndex* blockindex = nullptr);
 extern std::string HexBits(unsigned int nBits);
 extern std::string HelpRequiringPassphrase();

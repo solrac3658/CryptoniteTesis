@@ -165,6 +165,30 @@ Value ValueFromAmount(uint64_t v)
 	else return atof(buf);
 }
 
+// Should share some code with ValueFromAmount()
+Value ValueFromAmount_signed(int64_t v)
+{
+    char buf[64];
+    int idx=0;
+    uint64_t whole = (uint64_t) abs(v) / COIN;
+    uint64_t fraction = (uint64_t) abs(v) - (whole*COIN);
+    idx = sprintf(buf, "%s%ld.", v > 0 ? "" : "-", whole);
+
+    int i;
+    for(i=0; i < ceil(log10(COIN)); i++){
+			fraction *= 10;
+			buf[idx++] = '0' + (fraction/COIN);
+			fraction -= (fraction/COIN)*COIN;
+		}
+	if (fEPAmounts) {
+    buf[idx++] = 'e';
+    buf[idx++] = 'p';
+	}
+    buf[idx++] = 0;
+	if (fStringAmounts or fEPAmounts) return string(buf);
+	else return atof(buf);
+}
+
 std::string HexBits(unsigned int nBits)
 {
     union {
