@@ -1093,7 +1093,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             entry.push_back(Pair("account", strSentAccount));
             MaybePushAddress(entry, s.first);
             entry.push_back(Pair("category", "send"));
-            entry.push_back(Pair("amount", ValueFromAmount(fStandardAmounts ? s.second : s.second + nFee)));
+            entry.push_back(Pair("amount", fStandardAmounts ? ValueFromAmount_signed(-1 * s.second) : ValueFromAmount(s.second + nFee)));
             entry.push_back(Pair("fee", fStandardAmounts ? ValueFromAmount_signed(-1 * nFee) : ValueFromAmount(nFee)));
             if (fLong)
                 WalletTxToJSON(wtx, entry);
@@ -1459,7 +1459,7 @@ Value gettransaction(const Array& params, bool fHelp)
     //printf("C: %ld, V: %ld, D: %ld\n", nFee, wtx.GetValueOut(), nDebit);
 
     if (wtx.IsFromMe()){
-        entry.push_back(Pair("amount", ValueFromAmount(fStandardAmounts ? nDebit - nFee : nDebit)));
+        entry.push_back(Pair("amount", fStandardAmounts ? ValueFromAmount_signed(-1 * (nDebit - nFee)) : ValueFromAmount(nDebit)));
         entry.push_back(Pair("fee", fStandardAmounts ? ValueFromAmount_signed(-1 * nFee) : ValueFromAmount(nFee)));
     }else
         entry.push_back(Pair("amount", ValueFromAmount(nCredit)));
