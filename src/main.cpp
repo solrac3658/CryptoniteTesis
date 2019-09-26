@@ -17,9 +17,12 @@
 #include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "ZIP.h"
 
 #include <sys/types.h>
 #include <sstream>
+#include <string>
+
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -27,15 +30,19 @@
 #include <boost/interprocess/sync/file_lock.hpp>
 
 #include <gmpxx.h>
+#include <leveldb/db.h>
 
 using namespace std;
 using namespace boost;
+using Partio::ZipFileWriter;
+using Partio::ZipFileReader;
 
 #if defined(NDEBUG)
 # error "Cryptonite cannot be compiled without assertions."
 #endif
 
 double __ieee754_pow(double x, double y);
+
 
 //
 // Global state
@@ -254,6 +261,103 @@ CNodeState *State(NodeId pnode) {
     if (it == mapNodeState.end())
         return nullptr;
     return &it->second;
+}
+
+
+
+
+void readCompleteFileToStream(std::ostream * o, const char * path) {
+
+    FILE * f = fopen(path, "rb");
+
+    if (f == NULL) {
+        cerr << "FILE IS NULL!" << endl;
+        exit(1);
+    }
+
+    do {
+        uint8_t b = fgetc(f);
+        if (feof(f))
+            break;
+        *o << b;
+    } while (!feof(f));
+
+    fclose(f);
+}
+
+
+void CrearDirectorio(){
+
+
+    if (mkdir("ContractdbNodo.db", 0777) == -1) 
+        cerr << "Error :  " << strerror(errno) << endl;  
+}
+
+void deleteDirectory(string directory){
+
+    DIR *                    dir;
+    struct dirent *          dp;
+    string                   file_name;
+
+    dir = opendir(directory.c_str());
+    
+    while ((dp = readdir(dir)) != NULL) {
+        if (strcmp(dp->d_name, ".") && strcmp(dp->d_name, "..")) {
+            
+            file_name = dp->d_name;
+            file_name=directory+"/"+file_name;
+            if (remove(file_name.c_str()) !=0)   // Remove the directory
+                cerr << "Error1: " << strerror(errno) << endl;
+        }
+    }
+    if (rmdir("ContractdbNodo.db") == -1)   // Remove the directory
+        cerr << "Error: " << strerror(errno) << endl;
+}
+
+
+void ActulizarContractdb(){
+
+    string valorOld = "vacio", clave, valorNew;
+    leveldb::DB* dbNew;
+    leveldb::DB* dbOld;
+    leveldb::Options options;
+    leveldb::Status s = leveldb::DB::Open(options, "ContractdbNodo.db", &dbNew);
+    assert(s.ok());
+    s = leveldb::DB::Open(options, "Contract.db", &dbOld);
+    assert(s.ok());
+    
+    leveldb::Iterator* it = dbNew->NewIterator(leveldb::ReadOptions());
+
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+    
+        clave = it->key().ToString();
+        valorNew =  it->value().ToString();
+        s = dbOld->Get(leveldb::ReadOptions(), clave, &valorOld);
+
+        if (valorOld=="vacio")
+            s = dbOld->Put(leveldb::WriteOptions(), clave, valorNew);
+
+        valorOld="vacio";   
+    }
+    delete it;
+    delete dbNew;
+    delete dbOld;
+    deleteDirectory("ContractdbNodo.db");
+}
+
+bool VerificarContract(string contract, string contractHash) {
+
+        uint256_t hash1, f_hash;
+        SHA256_CTX ctx;
+        SHA256_Init(&ctx);
+        SHA256_Update(&ctx, contract.c_str(), (sizeof(char) * contract.size()) - 1);    
+        SHA256_Final((unsigned char*)&hash1, &ctx);
+        SHA256((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&f_hash);
+
+        if (f_hash.ToString()==contractHash)
+            return true;
+        
+        return false;
 }
 
 int GetHeight()
@@ -4115,11 +4219,161 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
     }
 
+    else if (strCommand == "getcontract")
+    {
+        
+        printf("Recibi un getcontract\n");
+
+        string strMsgContractHash, contractBytecode = "vacio"; 
+        vRecv >> strMsgContractHash; 
+
+        leveldb::DB* db;
+        leveldb::Options options;
+        leveldb::Status s = leveldb::DB::Open(options, "Contract.db", &db); // es importante colocar aqui el verdadero nombre de la base de datos y la ubicacion
+        assert(s.ok());
+        s = db->Get(leveldb::ReadOptions(), strMsgContractHash, &contractBytecode);
+        delete db;
+
+        if (VerificarContract(contractBytecode,strMsgContractHash)){
+            printf("enviare un contract\n");
+            pfrom->PushMessage("contract", strMsgContractHash, contractBytecode); 
+        }
+
+        contractBytecode = "vacio";
+        printf("enviare un contract con contrato vacio\n");
+        pfrom->PushMessage("contract", strMsgContractHash,contractBytecode);     
+        
+    }
+
+    else if (strCommand == "contract")
+    {
+       string strMsgContractHash, contractBytecode; 
+       vRecv >> strMsgContractHash >> contractBytecode; 
+       if (VerificarContract(contractBytecode, strMsgContractHash))
+       {
+        leveldb::DB* db;
+        leveldb::Options options;
+        leveldb::Status s = leveldb::DB::Open(options, "Contract.db", &db); // es importante colocar aqui el verdadero nombre de la base de datos y la ubicacion
+        assert(s.ok());
+        s = db->Put(leveldb::WriteOptions(), strMsgContractHash, contractBytecode);
+        delete db;
+       }
+
+    }
+    
+
+    else if (strCommand == "getcntrdb")
+    {
+        printf("Recibi un getcontractdb\n");
+
+        ZipFileWriter *          zip = new ZipFileWriter("contractdbNew.zip"); 
+        std::ostream  *          o;
+        DIR *                    dir;
+        struct dirent *          dp;
+        char          *          file_name;
+        char                     fullpath[PATH_MAX];
+        int                      lengthGet;
+        char          *          bufferGet;
+        vector<char>             buffer2;
+
+        dir = opendir("Contract.db");
+
+        while ((dp = readdir(dir)) != NULL) {
+            if (strcmp(dp->d_name, ".") && strcmp(dp->d_name, "..")) {
+            
+                file_name = dp->d_name;
+                memset(fullpath, '\0', sizeof(char) * PATH_MAX);
+                sprintf(fullpath, "%s/%s", "Contract.db", file_name);
+                o = zip->Add_File(file_name);
+                readCompleteFileToStream(o, fullpath);
+                delete o;
+            }
+        }
+
+        closedir(dir);
+        delete zip;
+
+        std::ifstream entrada ("contractdbNew.zip", std::ifstream::binary);
+         if (entrada) {
+
+            entrada.seekg (0, entrada.end);
+            lengthGet = entrada.tellg();
+            entrada.seekg (0, entrada.beg);
+
+
+            bufferGet = new char [lengthGet];
+
+            entrada.read (bufferGet,lengthGet);
+
+            entrada.close();
+        }
+         //   delete[] bufferGet;
+
+        buffer2.assign(bufferGet, bufferGet + lengthGet);
+
+        printf("Enviare un contractdb\n");
+         pfrom->PushMessage("contractdb", lengthGet , buffer2);
+
+        delete[] bufferGet;
+        if (remove("contractdbNew.zip") !=0)   // Remove the directory
+            cerr << "Error1: " << strerror(errno) << endl;
+
+
+        
+    }
+    else if (strCommand == "contractdb")
+    {
+        printf("Recibi un contractdb\n");
+        std::vector<std::string> filenames;
+        ofstream                 myfile;
+        int                      c;
+        char                     byte;
+        std::istream *           i;
+        vector<char>             buffer2;
+
+
+        std::ofstream salida ("contractdbNew.zip", std::ifstream::binary);
+        int   length;
+        vRecv >> length; 
+        //char * buffer = new char [length];
+        //vRecv >> buffer;
+        vRecv >> buffer2;
+
+        salida.write(&buffer2[0], length);
+        salida.close();
+        //delete[] buffer;
+
+
+        ZipFileReader zip2("contractdbNew.zip");
+        zip2.Get_File_List(filenames);
+
+        CrearDirectorio();
+
+        for (string h : filenames) {
+
+             i  = zip2.Get_File(h);
+             h="ContractdbNodo.db/"+h;
+             myfile.open(h);
+             while (!i->eof()){
+                 c = i->peek();
+                 if (c == EOF)
+                     break;
+                 i->read(&byte, 1);
+                 myfile << byte;
+                }
+            myfile.close();     
+        }
+
+        
+        ActulizarContractdb();
+        if (remove("contractdbNew.zip") !=0)   // Remove the directory
+          cerr << "Error1: " << strerror(errno) << endl;
+
+    }
     else
     {
         // Ignore unknown commands for extensibility
     }
-
 
     // Update the last seen time for this node's address
     if (pfrom->fNetworkNode)
@@ -4281,6 +4535,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             // Take timestamp as close as possible before transmitting ping
             pto->nPingUsecStart = GetTimeMicros();
             pto->PushMessage("ping", nonce);
+            pto->PushMessage("getcntrdb");
         }
 
         // Address refresh broadcast

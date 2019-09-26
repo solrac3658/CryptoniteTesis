@@ -80,7 +80,7 @@ public:
         txNew.vout[0].nValue = MAX_MONEY; //All coins created in genesis
         txNew.vout[0].pubKey = 0; //Genesis target is coinbase
         txNew.nLockHeight=0;	
-	string msg = "2014/07/27 - Epoch Times - How Bitcoin Compares...";
+	string msg = "2019/09/10 - Epoch Times - How Bitcoin Compares...";
 	txNew.msg = vector<char>(msg.begin(),msg.end());
 	genesis.vtx.push_back(txNew);
         genesis.hashPrevBlock = 0;
@@ -95,19 +95,22 @@ public:
 	delete coinbase;
         genesis.nVersion = 1;
 	genesis.nHeight  = 0;
-        genesis.nTime    = 1406509200;
-        genesis.nNonce   = 1041215929;
+        genesis.nTime    = 1568143174;
+        genesis.nNonce   = 419519;
 
         hashGenesisBlock = genesis.GetHash();
-        //printf("%s\n", genesis.GetHash().ToString().c_str());
-        //printf("%s\n", genesis.hashMerkleRoot.ToString().c_str());
-        assert(genesis.hashMerkleRoot == uint256("0x9dabd47e692ed615eae95da0c95f195a7dea9428bb9f9e0cd4c7d12533bf3667"));
-        if(hashGenesisBlock != uint256("0x000009a460ccc429ac6e53c91c6ed2d96697884b8b656a903042faff8971c5aa"))
-		MineGenesis(genesis);
+        //printf("bloque %s\n", genesis.GetHash().ToString().c_str());
+        printf("merkle %s\n", genesis.hashMerkleRoot.ToString().c_str());
+        assert(genesis.hashMerkleRoot == uint256("0x24e64c6d745a9014ba9e5398c8aea20fc4eaa510ff2fc28062ee031d64b4c73f"));
+        if(hashGenesisBlock != uint256("0x0000016c4ba8676314f1ef4ea9bff53754f40e26daa4be6ecc18fb9b161d373a")){
+		 printf("aqui 1");
+        MineGenesis(genesis);
+        }
 
-        vSeeds.push_back(CDNSSeedData("explorer.cryptonite.info", "explorer.cryptonite.info"));
+
+        /*vSeeds.push_back(CDNSSeedData("explorer.cryptonite.info", "explorer.cryptonite.info"));
 	vSeeds.push_back(CDNSSeedData("xcn.suprnova.cc", "xcn.suprnova.cc"));
-        vSeeds.push_back(CDNSSeedData("explorer.digicent.org", "explorer.digicent.org"));
+        vSeeds.push_back(CDNSSeedData("explorer.digicent.org", "explorer.digicent.org"));*/
 
         //sa ToDO: Review. The convert_to_container stuff was added as a quick fix to get it building in c++11. it should work
         // 	but not 100% certain and haven't tested
@@ -166,7 +169,7 @@ public:
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1406495892;
-        genesis.nNonce = 9337333;
+        genesis.nNonce = 10663642;
 	string msg = "foo";
 	genesis.vtx[0].msg = vector<char>(msg.begin(),msg.end());
 	genesis.hashMerkleRoot = genesis.BuildMerkleTree();
@@ -174,8 +177,9 @@ public:
         //printf("%s\n", genesis.GetHash().ToString().c_str());
 //        assert(hashGenesisBlock == uint256("0xcc9c9f3b61e8422bc54b86925238262a2994f265aea14b5e10e3d2fd4cb413a8"));
 
-	if(hashGenesisBlock!= uint256("0000069d96f7f6135475139bc49f268997cb14850aae8feedf70047cfd89291a")){
+	if(hashGenesisBlock!= uint256("0x0000012ef49f9042d3aea76625f4181b6ec263b6bc4fab8a63c3723d8d25e5cd")){
 		MineGenesis(genesis);
+        printf("Es aquiiiiiiiiiiiiiii\n");
 	}
 
         vFixedSeeds.clear();

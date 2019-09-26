@@ -16,6 +16,9 @@
 #include <vector>
 #include <gmpxx.h>
 
+#include <evmc/evmc.h>
+#include <evmc/evmc.hpp>
+
 extern const signed char p_util_hexdigit[256]; // defined in util.cpp
 
 inline signed char HexDigit(char c)
@@ -269,7 +272,6 @@ public:
         // num now contains the remainder of the division.
         return *this;
     }
-
 
     friend inline bool operator<(const base_uint& a, const base_uint& b)
     {
@@ -559,6 +561,41 @@ public:
         return *this;
     }
 
+    explicit uint160(const evmc::address& addr) {
+        typedef union hack {
+            uint8_t o[4];
+            uint32_t t;
+        } hack_t;
+
+        hack_t h;
+
+        for (int i = 4; i >= 0; i--) {
+            h.o[0] = addr.bytes[(i * 4) + 3];
+            h.o[1] = addr.bytes[(i * 4) + 2];
+            h.o[2] = addr.bytes[(i * 4) + 1];
+            h.o[3] = addr.bytes[(i * 4)];
+            pn[i] = h.t;
+        }
+    }
+
+    uint160& operator=(evmc::address& addr)
+    {
+        typedef union hack {
+            uint8_t o[4];
+            uint32_t t;
+        } hack_t;
+
+        hack_t h;
+
+        for (int i = 4; i >= 0; i--) {
+            h.o[0] = addr.bytes[(i * 4) + 3];
+            h.o[1] = addr.bytes[(i * 4) + 2];
+            h.o[2] = addr.bytes[(i * 4) + 1];
+            h.o[3] = addr.bytes[(i * 4)];
+            pn[i] = h.t;
+        }
+    }
+
     explicit uint160(const std::string& str)
     {
         SetHex(str);
@@ -754,7 +791,26 @@ public:
         return nCompact;
     }
 
+    operator evmc_uint256be() const {
+        evmc_uint256be hash;
+        typedef union hack {
+            uint8_t o[4];
+            uint32_t t;
+        } hack_t;
 
+        hack_t h;
+
+        for (int i = 0, j =7; i < 8; i++, j--) {
+            h.t = pn[j];
+
+            hash.bytes[(i * 4) + 3] = h.o[0];
+            hash.bytes[(i * 4) + 2] = h.o[1];
+            hash.bytes[(i * 4) + 1] = h.o[2];
+            hash.bytes[(i * 4)] = h.o[3];
+        }
+
+        return hash;
+    }
 
 };
 

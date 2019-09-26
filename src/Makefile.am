@@ -74,7 +74,8 @@ BITCOIN_CORE_H = \
   util.h \
   version.h \
   walletdb.h \
-  wallet.h
+  wallet.h \
+  ZIP.h
 
 JSON_H = \
   json/json_spirit.h \
@@ -154,6 +155,7 @@ libcryptonite_common_a_SOURCES = \
   hash/sha2.cpp \
   hash/sha2big.cpp  \
   hash/keccak.cpp \
+  zip.cpp \
   $(BITCOIN_CORE_H)
 
 libcryptonite_cli_a_SOURCES = \
@@ -170,7 +172,8 @@ cryptonited_LDADD = \
   libcryptonite_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
-  -lpthread
+  -lpthread \
+  -lz
 
 if ENABLE_WALLET
 cryptonited_LDADD += libcryptonite_wallet.a
@@ -191,7 +194,7 @@ cryptonited_LDFLAGS = -Wl,--allow-multiple-definition
 cryptonite_cli_LDADD = \
   libcryptonite_cli.a \
   libcryptonite_common.a \
-  $(BOOST_LIBS) -lgmp
+  $(BOOST_LIBS) -lgmp -lz
 cryptonite_cli_SOURCES = cryptonite-cli.cpp
 #
 

@@ -6,6 +6,10 @@
 #define TRIE_H
 
 #include <list>
+#include <cassert>
+#include <leveldb/db.h>
+#include <cstdint>
+#include <string>
 
 using namespace std;
 
@@ -27,11 +31,38 @@ public:
 	uint64_t Age() { return m_age; }
 	void SetAge(uint64_t age) { m_age = age; Dirtify();}
 	void SetBalance(uint64_t balance) { m_balance = balance; Dirtify(); }
+	void SetContractHash(uint256_t hash) { m_contracthash = hash; Dirtify(); }
+	void SetBdHash(uint256_t hash) { m_bdhash = hash; Dirtify(); }
 	void SetLimit(uint64_t limit) { m_limit = limit; Dirtify(); }
 	void SetFutureLimit(uint64_t limit) { m_futurelimit = limit; Dirtify(); }
 	uint64_t Balance() { return m_balance; }
 	uint64_t Limit() { return m_limit; }
 	uint64_t FutureLimit() { return m_futurelimit; }
+	uint256_t ContractHash() { return m_contracthash; }
+	uint256_t BdHash() { return m_bdhash; }
+	string Contract(){
+		string contract,key;
+		uint256_t hash1, f_hash;
+		key = ContractHash().ToString();
+		leveldb::DB* db;
+		leveldb::Options options;
+		leveldb::Status s = leveldb::DB::Open(options, "Contract.db", &db); // es importante colocar aqui el verdadero nombre de la base de datos y la ubicacion
+		assert(s.ok());
+		s = db->Get(leveldb::ReadOptions(), key, &contract);
+		delete db;
+		SHA256_CTX ctx;
+		SHA256_Init(&ctx);
+		SHA256_Update(&ctx, contract.c_str(), (sizeof(char) * contract.size()) - 1);	
+		SHA256_Final((unsigned char*)&hash1, &ctx);
+		SHA256((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&f_hash);
+		if (f_hash == ContractHash())
+		{
+			return contract;
+		}else{
+			return 0;
+		}
+
+	}
 	virtual void Dirtify() {};
 protected:
 	virtual uint32_t DeserializeI(uint8_t *src, uint32_t sz);
@@ -46,7 +77,17 @@ protected:
 	uint64_t m_limit; //8
 	uint64_t m_futurelimit; //8
 	uint160_t m_key; //32 
+	//----------------Agregados pro Cryptonite tesis --------------------
+	uint256_t m_contracthash; //32
+	uint256_t m_bdhash; //32
+	//----------------Fin Agregados pro Cryptonite tesis--------------------
 	uint8_t m_struct_end;
+
+
+	//----------------End Packed Struct--------------------
+
+
+	//----------------End Packed Struct--------------------
 	//----------------End Packed Struct--------------------
 };
 
