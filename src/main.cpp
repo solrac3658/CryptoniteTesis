@@ -4535,7 +4535,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             // Take timestamp as close as possible before transmitting ping
             pto->nPingUsecStart = GetTimeMicros();
             pto->PushMessage("ping", nonce);
-            pto->PushMessage("getcntrdb");
+           
         }
 
         // Address refresh broadcast
@@ -4614,6 +4614,8 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             pto->fStartSync = false;
 	    //printf("Sending getheaders %d\n", chainHeaders.Height());
             pto->PushMessage("getheaders", chainHeaders.GetLocator(), uint256(0));
+        // al sinronizar cabeceras que sincronize la base de datos de contratos
+            pto->PushMessage("getcntrdb");
         }
 
         // Resend wallet transactions that haven't gotten in a block yet
@@ -4804,7 +4806,11 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             pto->mapAskFor.erase(pto->mapAskFor.begin());
         }
         if (!vGetData.empty())
+        {
             pto->PushMessage("getdata", vGetData);
+            // Una vez que solicite la data solicita actualizar eñ contractdb
+            pto->PushMessage("getcntrdb");
+        }
 
     }
     return true;
