@@ -236,6 +236,8 @@ public:
     bool fSliced;
     int64_t sliceTime;
     CSlice slice;
+    bool  fSincContractdb;
+
 protected:
 
     // Denial-of-service detection/prevention
@@ -311,6 +313,7 @@ public:
         nPingUsecTime = 0;
         fPingQueued = false;
 	fSliced = false;
+    fSincContractdb = false;
 	CSlice slice;
 
         {

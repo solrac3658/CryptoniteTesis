@@ -14,6 +14,7 @@
 #include "walletdb.h"
 
 #include <stdint.h>
+#include <string.h>
 
 #include <boost/assign/list_of.hpp>
 #include "json/json_spirit_utils.h"
@@ -1775,3 +1776,82 @@ Value getwalletinfo(const Array& params, bool fHelp)
         obj.push_back(Pair("unlocked_until", (boost::int64_t)nWalletUnlockTime));
     return obj;
 }
+
+
+/***************************** Agregado por Tesis de Carlos Sanguña***************************************************************************/
+Value contractdeploy(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 4)
+        throw runtime_error(
+            "contractdeploy \"fromaccount\" \"bin-bytecode\" \"abi\" \"solidity version\"\n" 
+            "Create a contract address with associated bytecode that can be executed and has a persistent storage space.\n"
+            "Returns contract address.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("contractdeploy", " \"608060405234801561001057600080fd5b506...\"  \"abi\"  \"0.5.1+commit.c8a2cb62.Linux.g++\"")
+        );
+    string strAccount = AccountFromValue(params[0]);
+    uint64_t nAmount = 0;
+    CWalletTx wtx;
+    wtx.strFromAccount = strAccount;
+    int64_t nFeeRequired;
+    string strFailReason;
+
+    CBitcoinAddress address; /////////////////// Importanteeeeee esta es la direccion que deberá retornar la funcion ya que a su vez es la direccion que sera enviada a la transacción.
+
+    /*El despliegue del contrato deberá ir aqui*/
+
+
+
+    bool fCreated = pwalletMain->CreateTransaction(boost::get<CKeyID>(address.Get()), nAmount, wtx, nFeeRequired, strFailReason);
+    if (!fCreated)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
+    if (!pwalletMain->CommitTransaction(wtx,strFailReason))
+        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
+    
+   return CBitcoinAddress(address).ToString();
+}
+
+Value contractexec(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 4 || params.size() > 5)
+        throw runtime_error(
+            "contractexec \"fromaccount\" \"contract-address\" \"hash-method\" \"input\" (\"amount\") \n"
+            "execute the method associated with the contract address\n"
+            "Returns the method result.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("contractexec", " \"tabby\" \"1F2A98889594024BFFDA3311CBE69728D392C06D\"\"a5f3c23b\" \"{x:4 y:5}\" ")
+        );
+    
+    string strAccount = AccountFromValue(params[0]);
+
+    CBitcoinAddress address(params[1].get_str()); /// Direccion de la cuenta que se va a ejecutar
+    if (!address.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Cryptonite address");
+
+    uint64_t nAmount = 0;
+    if (params.size()==5)
+        nAmount=AmountFromValue(params[4]);
+
+    CWalletTx wtx;
+    wtx.strFromAccount = strAccount;
+    int64_t nFeeRequired;
+    string strFailReason;
+    wtx.sResult = "Este es el resultado";
+    wtx.bContract=true;
+
+    EnsureWalletIsUnlocked();
+
+    /*La ejecucion del copntrato puede ir aquí*/
+
+    bool fCreated = pwalletMain->CreateTransaction(boost::get<CKeyID>(address.Get()), nAmount, wtx, nFeeRequired, strFailReason);
+    if (!fCreated)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
+    if (!pwalletMain->CommitTransaction(wtx,strFailReason))
+        throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
+    
+
+    return wtx.GetTxID().GetHex(); /// Aqui lo que hay que colocar es el resultado de la ejecución
+}
+
+    
+

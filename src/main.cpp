@@ -3351,8 +3351,9 @@ void static ProcessGetData(CNode* pfrom)
                             // however we MUST always provide at least what the remote peer needs
                             typedef std::pair<unsigned int, uint256> PairType;
                             for (PairType& pair : merkleBlock.vMatchedTxn)
-                                if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, pair.second)))
+                                if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, pair.second))){
                                     pfrom->PushMessage("tx", block.vtx[pair.first]);
+                                }
                         }
                         // else
                             // no response
@@ -3847,6 +3848,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         pfrom->AddInventoryKnown(inv);
 
         LOCK(cs_main);
+    if (tx.IsContract())
+         pfrom->PushMessage("getcntrdb");
+
 
 	//Ignore incoming tx's until we are online
 	if(!IsInitialBlockDownload() && (fTrieOnline || ForceNoTrie())){
@@ -4615,7 +4619,6 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 	    //printf("Sending getheaders %d\n", chainHeaders.Height());
             pto->PushMessage("getheaders", chainHeaders.GetLocator(), uint256(0));
         // al sinronizar cabeceras que sincronize la base de datos de contratos
-            pto->PushMessage("getcntrdb");
         }
 
         // Resend wallet transactions that haven't gotten in a block yet
@@ -4809,7 +4812,12 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         {
             pto->PushMessage("getdata", vGetData);
             // Una vez que solicite la data solicita actualizar eñ contractdb
-            pto->PushMessage("getcntrdb");
+            
+        }
+        if (!pto->fSincContractdb)
+        {
+             pto->fSincContractdb=true;
+             pto->PushMessage("getcntrdb");
         }
 
     }

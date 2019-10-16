@@ -177,8 +177,9 @@ public:
     mutable uint64_t nLimitValue;
     mutable bool fSetLimit;
 
-    mutable string sBytecode;
-    mutable string sParameters;
+    mutable string sResult;
+    mutable string sStorageHash;
+    mutable bool bContract;
 
     CTransaction()
     {
@@ -204,8 +205,9 @@ public:
         READWRITE(voutt);
 	   READWRITE(msg);
         READWRITE(nLockHeight);
-         READWRITE(sBytecode);
-        READWRITE(sBytecode);
+         READWRITE(sResult);
+        READWRITE(sStorageHash);
+        READWRITE(bContract);
 
 	if(fRead){
 	    if(vint.size()==1 && voutt.size()==1 && vint[0].pubKey == voutt[0].pubKey && voutt[0].nValue < vint[0].nValue){
@@ -219,6 +221,11 @@ public:
 	}
     )
 
+    bool IsContract()
+    {
+        return bContract;
+    }
+
     void SetNull()
     {
         nVersion = CTransaction::CURRENT_VERSION;
@@ -227,6 +234,7 @@ public:
         nLockHeight = 0;
 	nLimitValue = 0;
 	fSetLimit=false;
+    bContract=false;
     }
 
     bool IsNull() const

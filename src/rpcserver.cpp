@@ -340,7 +340,7 @@ static const CRPCCommand vRPCCommands[] =
     { "gettxout",               &gettxout,               true,      false,      false },
     { "gettxoutsetinfo",        &gettxoutsetinfo,        true,      false,      false },
     { "verifychain",            &verifychain,            true,      false,      false },
-    { "balancesat",		&balancesat,	         false,     false,	false },
+    { "balancesat",		        &balancesat,	         false,     false,	    false },
 
     /* Mining */
     { "getblocktemplate",       &getblocktemplate,       true,      false,      false },
@@ -398,14 +398,19 @@ static const CRPCCommand vRPCCommands[] =
     { "walletlock",             &walletlock,             true,      false,      true },
     { "walletpassphrasechange", &walletpassphrasechange, false,     false,      true },
     { "walletpassphrase",       &walletpassphrase,       true,      false,      true },
-    { "resendwallet",		&resendwallet,		 false,     false,      true },
-    { "setlimit",		&setlimit,		 false,     false, 	true },
-
+    { "resendwallet",		    &resendwallet,		     false,     false,      true },
+    { "setlimit",	  	        &setlimit,		         false,     false, 	    true },
+    
+    /* Agregado por Tesis de Carlos SAnguña */
+    { "contractdeploy",         &contractdeploy,         false,     false,      true },
+    { "contractexec",           &contractexec,           false,     false,      true },
     /* Wallet-enabled mining */
     { "getgenerate",            &getgenerate,            true,      false,      false },
     { "gethashespersec",        &gethashespersec,        true,      false,      false },
     { "getwork",                &getwork,                true,      false,      true  },
     { "setgenerate",            &setgenerate,            true,      true,       false },
+
+
 #endif // ENABLE_WALLET
 };
 

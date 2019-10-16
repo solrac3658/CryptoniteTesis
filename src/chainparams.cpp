@@ -80,7 +80,7 @@ public:
         txNew.vout[0].nValue = MAX_MONEY; //All coins created in genesis
         txNew.vout[0].pubKey = 0; //Genesis target is coinbase
         txNew.nLockHeight=0;	
-	string msg = "2019/09/10 - Epoch Times - How Bitcoin Compares...";
+	string msg = "2019/10/12 - Epoch Times - How Bitcoin Compares...";
 	txNew.msg = vector<char>(msg.begin(),msg.end());
 	genesis.vtx.push_back(txNew);
         genesis.hashPrevBlock = 0;
@@ -95,14 +95,14 @@ public:
 	delete coinbase;
         genesis.nVersion = 1;
 	genesis.nHeight  = 0;
-        genesis.nTime    = 1568143174;
-        genesis.nNonce   = 419519;
+        genesis.nTime    = 1570896866;
+        genesis.nNonce   = 383491;
 
         hashGenesisBlock = genesis.GetHash();
         //printf("bloque %s\n", genesis.GetHash().ToString().c_str());
         printf("merkle %s\n", genesis.hashMerkleRoot.ToString().c_str());
-        assert(genesis.hashMerkleRoot == uint256("0x24e64c6d745a9014ba9e5398c8aea20fc4eaa510ff2fc28062ee031d64b4c73f"));
-        if(hashGenesisBlock != uint256("0x0000016c4ba8676314f1ef4ea9bff53754f40e26daa4be6ecc18fb9b161d373a")){
+        assert(genesis.hashMerkleRoot == uint256("0xa212d73601c570149af349e53d8e246e658c8c893536982ce1450fe3019ac654"));
+        if(hashGenesisBlock != uint256("0x00000b88a92881f612444b5847aede8a31a8660d76abac26153bf875449b4044")){
 		 printf("aqui 1");
         MineGenesis(genesis);
         }
@@ -169,7 +169,7 @@ public:
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1406495892;
-        genesis.nNonce = 10663642;
+        genesis.nNonce = 11338586;
 	string msg = "foo";
 	genesis.vtx[0].msg = vector<char>(msg.begin(),msg.end());
 	genesis.hashMerkleRoot = genesis.BuildMerkleTree();
@@ -177,7 +177,7 @@ public:
         //printf("%s\n", genesis.GetHash().ToString().c_str());
 //        assert(hashGenesisBlock == uint256("0xcc9c9f3b61e8422bc54b86925238262a2994f265aea14b5e10e3d2fd4cb413a8"));
 
-	if(hashGenesisBlock!= uint256("0x0000012ef49f9042d3aea76625f4181b6ec263b6bc4fab8a63c3723d8d25e5cd")){
+	if(hashGenesisBlock!= uint256("0x000009ae43c7fd9aa98028962db966e9b1c608b33c4c227010592dc5f1b0d078")){
 		MineGenesis(genesis);
         printf("Es aquiiiiiiiiiiiiiii\n");
 	}
